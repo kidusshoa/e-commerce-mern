@@ -23,6 +23,10 @@ interface ProductStore {
   deleteProduct: (
     pid: string
   ) => Promise<{ success: boolean; message: string }>;
+  updatedProduct: (
+    pid: string,
+    updatedProduct: Partial<Product>
+  ) => Promise<{ success: boolean; message: string }>;
 }
 
 export const useProductStore = create<ProductStore>((set) => ({
@@ -63,5 +67,25 @@ export const useProductStore = create<ProductStore>((set) => ({
     }));
 
     return { success: true, message: "Product deleted successfully" };
+  },
+  updatedProduct: async (pid: string, updatedProduct: Partial<Product>) => {
+    const res = await fetch(`/api/products/${pid}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(updatedProduct),
+    });
+
+    const data = await res.json();
+    if (!data.success) return { success: false, message: data.message };
+
+    set((state) => ({
+      products: state.products.map((product) =>
+        product._id === pid ? data.data : product
+      ),
+    }));
+
+    return { success: true, message: "Product updated successfully" };
   },
 }));
